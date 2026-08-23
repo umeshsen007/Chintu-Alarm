@@ -23,4 +23,6 @@ class DashboardViewModel : ViewModel() {
         list.add(AlarmItemDto(timeStr = "10:00 PM", label = "Mid Night Alarm", weeks = listOf("Wed","Sun"),isAlarmActive = false))
         _alarmList.value.addAll(list)
     }
+
+
 }

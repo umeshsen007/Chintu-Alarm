@@ -1,5 +1,6 @@
 package com.example.chintualarm.presentation.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,15 +9,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +29,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
+import chintualarm.shared.generated.resources.Res
+import chintualarm.shared.generated.resources.reminder
 import com.example.chintualarm.presentation.viewmodel.DashboardViewModel
+import org.jetbrains.compose.resources.painterResource
 
 data class AlarmItemDto(
     var timeStr: String? = null,
@@ -54,18 +58,22 @@ fun ContentView() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
-            SmallFloatingActionButton(
-                modifier = Modifier.wrapContentSize(),
+            FloatingActionButton(
+                modifier = Modifier.padding(end = 12.dp),
                 onClick = {
 
                 },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.secondary
+                containerColor = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.background,
             ) {
-                Text("+ Add")
+                Image(
+                    painter = painterResource(Res.drawable.reminder),
+                    contentDescription = "",
+                    modifier = Modifier.size(60.dp)
+                )
             }
         },
-        floatingActionButtonPosition = FabPosition.Center
+        floatingActionButtonPosition = FabPosition.End
     ) {
         LazyColumn(
             modifier = Modifier
