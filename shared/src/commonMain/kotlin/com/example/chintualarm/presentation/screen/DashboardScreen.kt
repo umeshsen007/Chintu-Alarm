@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import chintualarm.shared.generated.resources.Res
 import chintualarm.shared.generated.resources.reminder
 import com.example.chintualarm.presentation.viewmodel.DashboardViewModel
@@ -54,6 +56,8 @@ class DashboardScreen : Screen {
 fun ContentView() {
     val vm: DashboardViewModel = viewModel()
     val alarmList = vm.alarmList.collectAsState()
+    val navigator = LocalNavigator.currentOrThrow
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -61,7 +65,7 @@ fun ContentView() {
             FloatingActionButton(
                 modifier = Modifier.padding(end = 12.dp),
                 onClick = {
-
+                    navigator.push(AddUpdateAlarmScreen())
                 },
                 containerColor = MaterialTheme.colorScheme.background,
                 contentColor = MaterialTheme.colorScheme.background,
@@ -103,12 +107,12 @@ private fun ItemRowView(item: AlarmItemDto) {
             Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = item.timeStr ?: "",
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(end = 5.dp)
                 )
                 Text(
                     text = item.timeStr?.takeLast(2) ?: "",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
 
@@ -118,7 +122,7 @@ private fun ItemRowView(item: AlarmItemDto) {
                 if (!item.label.isNullOrBlank()) {
                     Text(
                         text = item.label ?: "",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         color = Color.Blue,
                         modifier = Modifier.padding(end = 10.dp),
                     )
@@ -132,7 +136,7 @@ private fun ItemRowView(item: AlarmItemDto) {
                                 append(", ")
                             }
                         },
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleSmall
                     )
                 }
             }
