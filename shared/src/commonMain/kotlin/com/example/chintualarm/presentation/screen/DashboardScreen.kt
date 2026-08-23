@@ -33,15 +33,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import chintualarm.shared.generated.resources.Res
 import chintualarm.shared.generated.resources.reminder
+import com.example.chintualarm.AlarmItemDto
 import com.example.chintualarm.presentation.viewmodel.DashboardViewModel
 import org.jetbrains.compose.resources.painterResource
-
-data class AlarmItemDto(
-    var timeStr: String? = null,
-    var label: String? = null,
-    var weeks: List<String?>? = emptyList(),
-    var isAlarmActive: Boolean
-)
 
 class DashboardScreen : Screen {
 
@@ -148,7 +142,7 @@ private fun ItemRowView(item: AlarmItemDto) {
             verticalArrangement = Arrangement.Center
         ) {
             Switch(
-                checked = item.isAlarmActive,
+                checked = item.isAlarmActive ?: false,
                 onCheckedChange = {
                     // todo later
                 }
