@@ -21,6 +21,7 @@ actual class AlarmScheduler actual constructor() {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("ALARM_ID", alarm.id)
             putExtra("LABEL", alarm.label)
+            putExtra("REMIND_LATER", alarm.remindLater)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

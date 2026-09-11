@@ -6,6 +6,8 @@ import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNUserNotificationCenter
 import platform.UserNotifications.UNNotificationSound
 import platform.Foundation.NSDateComponents
+import platform.UserNotifications.UNAuthorizationOptionAlert
+import platform.UserNotifications.UNAuthorizationOptionSound
 
 actual class AlarmScheduler actual constructor() {
     actual fun scheduleAlarm(alarm: AlarmItemDto) {
@@ -20,11 +22,19 @@ actual class AlarmScheduler actual constructor() {
         
         val trigger = UNCalendarNotificationTrigger.triggerWithDateMatchingComponents(dateComponents, repeats = false)
         
+
         val request = UNNotificationRequest.requestWithIdentifier(alarm.id, content, trigger)
         
-        UNUserNotificationCenter.currentNotificationCenter().addNotificationRequest(request) { error ->
-            if (error != null) {
-                println("Error scheduling notification: $error")
+        val center = UNUserNotificationCenter.currentNotificationCenter()
+        center.requestAuthorizationWithOptions(UNAuthorizationOptionAlert or UNAuthorizationOptionSound) { granted, authError ->
+            if (granted) {
+                center.addNotificationRequest(request) { error ->
+                    if (error != null) {
+                        println("Error scheduling notification: $error")
+                    }
+                }
+            } else {
+                println("Notification permission denied: $authError")
             }
         }
     }

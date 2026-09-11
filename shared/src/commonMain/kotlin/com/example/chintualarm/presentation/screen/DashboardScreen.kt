@@ -1,6 +1,5 @@
 package com.example.chintualarm.presentation.screen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +33,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -73,10 +71,11 @@ fun ContentView() {
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
-                Image(
+                androidx.compose.material3.Icon(
                     painter = painterResource(Res.drawable.reminder),
                     contentDescription = "Add Alarm",
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         },
@@ -124,10 +123,11 @@ fun ContentView() {
                                 .padding(horizontal = 20.dp),
                             contentAlignment = Alignment.CenterEnd
                         ) {
-                            Image(
+                            Icon(
                                 painter = painterResource(Res.drawable.close),
                                 contentDescription = "Delete",
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
                     },
@@ -140,6 +140,10 @@ fun ContentView() {
                     }
                 )
             }
+
+            item {
+                Spacer(modifier = Modifier.height(50.dp))
+            }
         }
     }
 }
@@ -151,7 +155,7 @@ private fun ItemRowView(
     onToggle: (Boolean) -> Unit
 ) {
     val alpha = if (item.isAlarmActive) 1f else 0.5f
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()

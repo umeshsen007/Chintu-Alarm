@@ -48,6 +48,9 @@ import com.example.chintualarm.AlarmItemDto
 import com.example.chintualarm.presentation.viewmodel.DashboardViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 data class AddUpdateAlarmScreen(val alarmId: String? = null) : Screen {
     @Composable
@@ -67,9 +70,11 @@ private fun AddUpdateAlarmView(alarmId: String?) {
         alarmList.find { it.id == alarmId }
     }
 
+    val now = remember { kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()) }
+
     val timePickerState = rememberTimePickerState(
-        initialHour = existingAlarm?.hour ?: 8,
-        initialMinute = existingAlarm?.minute ?: 30,
+        initialHour = existingAlarm?.hour ?: now.hour,
+        initialMinute = existingAlarm?.minute ?: now.minute,
         is24Hour = false
     )
 
@@ -77,6 +82,9 @@ private fun AddUpdateAlarmView(alarmId: String?) {
     var vibrate by remember { mutableStateOf(existingAlarm?.vibrate ?: false) }
     var label by remember { mutableStateOf(existingAlarm?.label ?: "Alarm") }
     var sound by remember { mutableStateOf(existingAlarm?.alarmSound ?: "Default ringtone") }
+    var remindLater by remember { mutableStateOf(existingAlarm?.remindLater ?: 5) }
+    
+    var showRemindLaterDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -93,7 +101,8 @@ private fun AddUpdateAlarmView(alarmId: String?) {
                             alarmSound = sound,
                             label = label,
                             vibrate = vibrate,
-                            isAlarmActive = true
+                            isAlarmActive = true,
+                            remindLater = remindLater
                         )
                         if (existingAlarm != null) {
                             vm.updateAlarm(newAlarm)
@@ -136,22 +145,21 @@ private fun AddUpdateAlarmView(alarmId: String?) {
             }
 
             item {
-                KeyValueRowView(
+                LabelTextFieldRowView(
                     img = Res.drawable.label,
-                    label = "Label",
-                    value = label
-                ) {
-                    // TODO: open label edit dialog
-                }
+                    labelTitle = "Label",
+                    value = label,
+                    onValueChange = { label = it }
+                )
             }
 
             item {
                 KeyValueRowView(
                     img = Res.drawable.alarm_remind,
                     label = "Remind Later",
-                    value = "5 Minutes"
+                    value = "$remindLater Minute${if (remindLater > 1) "s" else ""}"
                 ) {
-                    // TODO: open remind later dialog
+                    showRemindLaterDialog = true
                 }
             }
 
@@ -162,6 +170,17 @@ private fun AddUpdateAlarmView(alarmId: String?) {
                 )
             }
         }
+    }
+
+    if (showRemindLaterDialog) {
+        RemindLaterDialog(
+            initialValue = remindLater,
+            onDismiss = { showRemindLaterDialog = false },
+            onConfirm = { 
+                remindLater = it
+                showRemindLaterDialog = false
+            }
+        )
     }
 }
 
@@ -220,10 +239,11 @@ fun KeyValueRowView(
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
+        androidx.compose.material3.Icon(
             painter = painterResource(img),
             modifier = Modifier.size(24.dp),
-            contentDescription = ""
+            contentDescription = "",
+            tint = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.size(24.dp))
 
@@ -243,6 +263,46 @@ fun KeyValueRowView(
 }
 
 @Composable
+fun LabelTextFieldRowView(
+    img: DrawableResource,
+    labelTitle: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        androidx.compose.material3.Icon(
+            painter = painterResource(img),
+            modifier = Modifier.size(24.dp),
+            contentDescription = "",
+            tint = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.size(24.dp))
+
+        Column(verticalArrangement = Arrangement.SpaceEvenly) {
+            Text(
+                text = labelTitle,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            androidx.compose.foundation.text.BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
 fun VibrateToggleRowView(isVibrateEnable: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
@@ -250,25 +310,62 @@ fun VibrateToggleRowView(isVibrateEnable: Boolean, onCheckedChange: (Boolean) ->
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
+        androidx.compose.material3.Icon(
             painter = painterResource(Res.drawable.vibrate),
             modifier = Modifier.size(24.dp),
-            contentDescription = ""
+            contentDescription = "",
+            tint = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.size(24.dp))
 
         Text(
             text = "Vibrate",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f)
         )
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        Switch(
-            checked = isVibrateEnable,
-            onCheckedChange = onCheckedChange
-        )
+        Switch(checked = isVibrateEnable, onCheckedChange = onCheckedChange)
     }
+}
+
+@Composable
+fun RemindLaterDialog(
+    initialValue: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Remind later")
+        },
+        text = {
+            androidx.compose.foundation.lazy.LazyColumn {
+                items(30) { index ->
+                    val minutes = index + 1
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onConfirm(minutes) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = "$minutes minute${if (minutes > 1) "s" else ""}")
+                        androidx.compose.material3.RadioButton(
+                            selected = initialValue == minutes,
+                            onClick = { onConfirm(minutes) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -279,7 +376,7 @@ fun TopBarView(onBackPressed: () -> Unit = {}, onDonePressed: () -> Unit = {}) {
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
+        androidx.compose.material3.Icon(
             painter = painterResource(Res.drawable.close),
             modifier = Modifier
                 .size(24.dp)
@@ -287,6 +384,7 @@ fun TopBarView(onBackPressed: () -> Unit = {}, onDonePressed: () -> Unit = {}) {
                     onBackPressed()
                 },
             contentDescription = "Close",
+            tint = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -298,14 +396,15 @@ fun TopBarView(onBackPressed: () -> Unit = {}, onDonePressed: () -> Unit = {}) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Image(
+        androidx.compose.material3.Icon(
             painter = painterResource(Res.drawable.check),
             modifier = Modifier
                 .size(24.dp)
                 .clickable {
                     onDonePressed()
                 },
-            contentDescription = "Save"
+            contentDescription = "Done",
+            tint = MaterialTheme.colorScheme.onSurface
         )
     }
 }
