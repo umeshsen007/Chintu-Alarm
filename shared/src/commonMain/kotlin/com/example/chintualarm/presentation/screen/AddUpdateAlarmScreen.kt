@@ -10,10 +10,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -48,9 +56,6 @@ import com.example.chintualarm.AlarmItemDto
 import com.example.chintualarm.presentation.viewmodel.DashboardViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 data class AddUpdateAlarmScreen(val alarmId: String? = null) : Screen {
     @Composable
@@ -70,11 +75,11 @@ private fun AddUpdateAlarmView(alarmId: String?) {
         alarmList.find { it.id == alarmId }
     }
 
-    val now = remember { kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()) }
+    val nowPair = remember { com.example.chintualarm.getCurrentHourAndMinute() }
 
     val timePickerState = rememberTimePickerState(
-        initialHour = existingAlarm?.hour ?: now.hour,
-        initialMinute = existingAlarm?.minute ?: now.minute,
+        initialHour = existingAlarm?.hour ?: nowPair.first,
+        initialMinute = existingAlarm?.minute ?: nowPair.second,
         is24Hour = false
     )
 
@@ -85,6 +90,7 @@ private fun AddUpdateAlarmView(alarmId: String?) {
     var remindLater by remember { mutableStateOf(existingAlarm?.remindLater ?: 5) }
     
     var showRemindLaterDialog by remember { mutableStateOf(false) }
+    var showSoundSelectionDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -164,6 +170,16 @@ private fun AddUpdateAlarmView(alarmId: String?) {
             }
 
             item {
+                KeyValueRowView(
+                    img = Res.drawable.alarm,
+                    label = "Alarm ringtone",
+                    value = sound
+                ) {
+                    showSoundSelectionDialog = true
+                }
+            }
+
+            item {
                 VibrateToggleRowView(
                     isVibrateEnable = vibrate,
                     onCheckedChange = { vibrate = it }
@@ -179,6 +195,17 @@ private fun AddUpdateAlarmView(alarmId: String?) {
             onConfirm = { 
                 remindLater = it
                 showRemindLaterDialog = false
+            }
+        )
+    }
+
+    if (showSoundSelectionDialog) {
+        SoundSelectionDialog(
+            initialValue = sound,
+            onDismiss = { showSoundSelectionDialog = false },
+            onConfirm = { 
+                sound = it
+                showSoundSelectionDialog = false
             }
         )
     }
@@ -415,5 +442,91 @@ fun TopBarView(onBackPressed: () -> Unit = {}, onDonePressed: () -> Unit = {}) {
 fun AddUpdateAlarmScreenPreview() {
     MaterialTheme {
         AddUpdateAlarmView(null)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SoundSelectionDialog(
+    initialValue: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    val sounds = listOf("Default ringtone", "alarm", "alarm_clock", "iphone_alarm")
+    var selectedSound by remember { mutableStateOf(initialValue) }
+
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    text = "Select Ringtone",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
+                    items(sounds) { sound ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedSound = sound }
+                                .padding(vertical = 12.dp)
+                        ) {
+                            androidx.compose.material3.RadioButton(
+                                selected = sound == selectedSound,
+                                onClick = { selectedSound = sound },
+                                colors = androidx.compose.material3.RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                            Spacer(modifier = Modifier.size(12.dp))
+                            Text(
+                                text = sound.replace("_", " ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.size(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    androidx.compose.material3.TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Cancel",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.size(16.dp))
+                    androidx.compose.material3.Button(
+                        onClick = { onConfirm(selectedSound) },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = "OK",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        }
     }
 }

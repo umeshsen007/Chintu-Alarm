@@ -69,9 +69,10 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val label = intent.getStringExtra("LABEL") ?: "Alarm"
         val remindLater = intent.getIntExtra("REMIND_LATER", 5)
+        val sound = intent.getStringExtra("ALARM_SOUND")
         val notificationId = System.currentTimeMillis().toInt()
         
-        createNotificationChannel(context)
+        createNotificationChannel(context, sound)
 
         val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -100,8 +101,9 @@ class AlarmReceiver : BroadcastReceiver() {
             context, notificationId + 1, remindIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val builder = NotificationCompat.Builder(context, "alarm_channel")
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+        val channelId = getChannelIdForSound(sound)
+        val builder = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(context.applicationInfo.icon)
             .setContentTitle("Chintu Alarm")
             .setContentText(label)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -119,14 +121,35 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun createNotificationChannel(context: Context) {
+    private fun getChannelIdForSound(sound: String?): String {
+        return when (sound) {
+            "alarm" -> "alarm_channel_alarm"
+            "alarm_clock" -> "alarm_channel_alarm_clock"
+            "iphone_alarm" -> "alarm_channel_iphone_alarm"
+            else -> "alarm_channel_default"
+        }
+    }
+
+    private fun createNotificationChannel(context: Context, sound: String?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Alarm Channel"
+            val channelId = getChannelIdForSound(sound)
+            val name = "Alarm Channel ($sound)"
             val descriptionText = "Channel for Alarm notifications"
             val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("alarm_channel", name, importance).apply {
+            
+            val channel = NotificationChannel(channelId, name, importance).apply {
                 description = descriptionText
+                
+                if (sound != null && sound != "Default ringtone" && sound != "Default") {
+                    val soundUri = android.net.Uri.parse("android.resource://${context.packageName}/raw/${sound}")
+                    val audioAttributes = android.media.AudioAttributes.Builder()
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                        .build()
+                    setSound(soundUri, audioAttributes)
+                }
             }
+            
             val notificationManager: NotificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)

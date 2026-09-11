@@ -14,7 +14,11 @@ actual class AlarmScheduler actual constructor() {
         val content = UNMutableNotificationContent()
         content.setTitle("Chintu Alarm")
         content.setBody(alarm.label ?: "Alarm")
-        content.setSound(UNNotificationSound.defaultSound)
+        if (alarm.alarmSound == "Default ringtone" || alarm.alarmSound == "Default") {
+            content.setSound(UNNotificationSound.defaultSound)
+        } else {
+            content.setSound(UNNotificationSound.soundNamed("${alarm.alarmSound}.mp3"))
+        }
         
         val dateComponents = NSDateComponents()
         dateComponents.hour = alarm.hour.toLong()

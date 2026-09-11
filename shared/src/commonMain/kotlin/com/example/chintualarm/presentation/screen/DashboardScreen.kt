@@ -56,7 +56,7 @@ class DashboardScreen : Screen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentView() {
-    val vm: DashboardViewModel = viewModel()
+    val vm: DashboardViewModel = viewModel { DashboardViewModel() }
     val alarmList = vm.alarmList.collectAsState()
     val navigator = LocalNavigator.currentOrThrow
 
