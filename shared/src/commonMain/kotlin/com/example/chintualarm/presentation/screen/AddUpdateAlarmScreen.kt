@@ -140,15 +140,7 @@ private fun AddUpdateAlarmView(alarmId: String?) {
                 DaySelectorRow(selectedDays = selectedDays, onDaysChanged = { selectedDays = it })
             }
 
-            item {
-                KeyValueRowView(
-                    img = Res.drawable.alarm,
-                    label = "Alarm Sound",
-                    value = sound
-                ) {
-                    // TODO: open sound picker
-                }
-            }
+
 
             item {
                 LabelTextFieldRowView(
