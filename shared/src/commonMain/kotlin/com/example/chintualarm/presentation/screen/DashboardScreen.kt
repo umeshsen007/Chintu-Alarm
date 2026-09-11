@@ -63,20 +63,39 @@ fun ContentView() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
-            FloatingActionButton(
-                modifier = Modifier.padding(end = 12.dp, bottom = 12.dp),
-                onClick = {
-                    navigator.push(AddUpdateAlarmScreen(null))
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
             ) {
-                androidx.compose.material3.Icon(
-                    painter = painterResource(Res.drawable.reminder),
-                    contentDescription = "Add Alarm",
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                FloatingActionButton(
+                    onClick = {
+                        navigator.push(ChintuAiScreen())
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                ) {
+                    androidx.compose.material3.Text(
+                        text = "AI",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+
+                FloatingActionButton(
+                    onClick = {
+                        navigator.push(AddUpdateAlarmScreen(null))
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ) {
+                    androidx.compose.material3.Icon(
+                        painter = painterResource(Res.drawable.reminder),
+                        contentDescription = "Add Alarm",
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.End
